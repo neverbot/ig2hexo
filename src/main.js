@@ -1,33 +1,54 @@
-const Parser = require('rss-parser');
-const request = require('request');
-const fs = require('fs');
-const mime = require('mime-types');
-const slugify = require('slugify');
+// const Parser = require('rss-parser');
+// const request = require('request');
+// const fs = require('fs');
+// const mime = require('mime-types');
+// const slugify = require('slugify');
 
-// script started based on this:
-// https://thomasclowes.com/syncing-instagram-posts-to-a-ghost-blog/
+import * as Logger from './log.js';
+import chalk from 'chalk';
+import fs from 'fs';
+import path from 'path';
 
-// We will hold our post objects fetched and parsed from our feed globally
-// So we dont have to pass them around functions. This is lame.
-let itemsArray;
+async function init() {
+  Logger.init();
 
-//Function for pulling Instagram posts from my personal QueryFeed RSS Feed
-async function getInstagramPosts(accessToken) {
-  const feedUrl = 'https://queryfeed.net/instagram?q=thomasclowes';
-  const feed = await parser.parseURL(feedUrl);
+  const args = process.argv;
 
-  console.log('Feed Title: ' + feed.title);
-  console.log('Looping through parsed Instagram posts');
+  if (args.length < 3) {
+    Logger.error('Arguments not provided. Use ' + chalk.red('ig2hexo <backup path>') + '.');
+    process.exit(0);
+  }
 
-  //Set our posts object in our global var
-  itemsArray = feed.items;
+  const backupPath = args[2];
 
-  //Fetch the first image
-  getAndGo(accessToken);
+  try {
+    await fs.promises.access(path.resolve(path.dirname(''), backupPath));
+    await fs.promises.access(path.resolve(path.dirname(''), backupPath + 'content/posts_1.json'));
+    // check succeeded
+  } catch (error) {
+    // check failed
+    Logger.error('Instagram backup path not found in that place.\n' + error);
+    process.exit(0);
+  }
 
-  return true;
+  const json = JSON.parse(
+    await fs.promises.readFile(path.resolve(path.dirname(''), backupPath + 'content/posts_1.json'))
+  );
+
+  Logger.log(chalk.cyan('IG posts parsed successfully.'));
+
+  // console.log(json);
 }
 
+async function run() {}
+
+export default {
+  init,
+  run,
+};
+
+// old code
+/*
 //Function that pulls the image file for the next Instagram post
 //And calls to upload it to my server
 const getAndGo = function (accessToken) {
@@ -195,3 +216,4 @@ const submitPost = function (accessToken, imageUrl, publishDate, description) {
 };
 
 getInstagramPosts();
+*/
