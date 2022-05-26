@@ -8,6 +8,7 @@ import * as Logger from './log.js';
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
+import Hexo from 'hexo';
 
 async function init() {
   Logger.init();
@@ -31,13 +32,45 @@ async function init() {
     process.exit(0);
   }
 
-  const json = JSON.parse(
+  const posts = JSON.parse(
     await fs.promises.readFile(path.resolve(path.dirname(''), backupPath + 'content/posts_1.json'))
   );
 
   Logger.log(chalk.cyan('IG posts parsed successfully.'));
 
   // console.log(json);
+
+  let hexo = new Hexo(process.cwd(), {});
+  await hexo.init();
+
+  Logger.log(chalk.cyan('Hexo instance initialized.'));
+
+  for (const post of posts) {
+    let text = post.title ? post.title : post.media[0].title;
+
+    // TODO: we have big problems here with the unicode encoding
+
+    text = text.replace('\n', '\u000D');
+
+    console.log(text);
+    text = JSON.parse('"' + text + '"');
+    // text = text.normalize();
+
+    const date = post.creation_timestamp
+      ? post.creation_timestamp * 1000
+      : post.media[0].creation_timestamp * 1000;
+
+    const images = post.media.map((media) => {
+      return media.uri;
+    });
+
+    // console.log(images);
+
+    await hexo.post.create(
+      { title: 'instagram post', layout: 'ig', date: date, images, content: text },
+      true
+    );
+  }
 }
 
 async function run() {}
