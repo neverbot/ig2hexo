@@ -4,8 +4,17 @@ import fs from 'fs';
 import path from 'path';
 import Hexo from 'hexo';
 import { DateTime } from 'luxon';
+import iconv from 'iconv-lite';
 
 const _CONFIG_LOCALE = 'en';
+const _CONFIG_ENCODING = 'utf8'; // 'latin1';
+
+// fix, facebook code monkeys were wrong with this
+// (apparently both in facebook and instagram exports)
+// https://krvtz.net/posts/how-facebook-got-unicode-wrong.html
+function fixEncoding(string) {
+  return iconv.decode(iconv.encode(string, 'latin1'), 'utf8');
+}
 
 async function init() {
   Logger.init();
@@ -40,12 +49,13 @@ async function init() {
   }
 
   const posts = JSON.parse(
-    await fs.promises.readFile(path.resolve(path.dirname(''), backupPath + 'content/posts_1.json'))
+    await fs.promises.readFile(
+      path.resolve(path.dirname(''), backupPath + 'content/posts_1.json'),
+      _CONFIG_ENCODING
+    )
   );
 
   Logger.log(chalk.cyan('IG posts parsed successfully.'));
-
-  // console.log(json);
 
   let hexo = new Hexo(process.cwd(), {});
   await hexo.init();
@@ -55,14 +65,8 @@ async function init() {
   let numPosts = 0;
 
   for (const post of posts) {
-    // let text = post.title ? post.title : post.media[0].title;
-
-    // TODO: we have big problems here with the unicode encoding
-
-    // text = text.replace('\n', '\u000D');
-    // console.log(text);
-    // text = JSON.parse('"' + text + '"');
-    // text = text.normalize();
+    let text = post.title ? post.title : post.media[0].title;
+    text = fixEncoding(text);
 
     const timestamp = post.creation_timestamp
       ? post.creation_timestamp * 1000
@@ -71,8 +75,6 @@ async function init() {
     const images = post.media.map((media) => {
       return media.uri;
     });
-
-    // console.log(images);
 
     await hexo.post.create(
       {
@@ -84,7 +86,7 @@ async function init() {
         layout: 'ig',
         date: timestamp,
         images,
-        content: 'blabla', //text,
+        content: text,
       },
       true
     );
@@ -93,16 +95,11 @@ async function init() {
   }
 
   const endTime = DateTime.now();
-  const time = endTime.diff(startTime, 'seconds').toObject();
+  const time = endTime.diff(startTime, 'seconds').toObject().seconds;
 
   Logger.log(
     chalk.cyan(
-      'Importing process ended: ' +
-        time.seconds.toFixed(1) +
-        ' seconds.\n' +
-        ' - ' +
-        numPosts +
-        ' posts.'
+      'Importing process ended: ' + time.toFixed(1) + ' seconds.\n' + ' - ' + numPosts + ' posts.'
     )
   );
 }
