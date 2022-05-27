@@ -7,6 +7,7 @@ import { DateTime } from 'luxon';
 import iconv from 'iconv-lite';
 
 const _CONFIG_LOCALE = 'en';
+const _CONFIG_POST_LAYOUT = 'ig';
 
 // fix, facebook code monkeys were wrong with this
 // (apparently both in facebook and instagram exports)
@@ -22,7 +23,7 @@ async function init() {
 
   Logger.log(
     chalk.cyan(
-      'Importing process start: ' +
+      'Import starts: ' +
         startTime.setLocale(_CONFIG_LOCALE).toLocaleString(DateTime.TIME_24_WITH_SECONDS) +
         '.'
     )
@@ -82,7 +83,7 @@ async function init() {
           DateTime.fromMillis(timestamp)
             .setLocale(_CONFIG_LOCALE)
             .toLocaleString(DateTime.DATETIME_MED),
-        layout: 'ig',
+        layout: _CONFIG_POST_LAYOUT,
         date: timestamp,
         images,
         content: text,
@@ -97,9 +98,7 @@ async function init() {
   const time = endTime.diff(startTime, 'seconds').toObject().seconds;
 
   Logger.log(
-    chalk.cyan(
-      'Importing process ended: ' + time.toFixed(1) + ' seconds.\n' + ' - ' + numPosts + ' posts.'
-    )
+    chalk.cyan('Import ended: ' + time.toFixed(1) + ' seconds.\n' + ' - ' + numPosts + ' posts.')
   );
 }
 
