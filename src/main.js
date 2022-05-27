@@ -7,7 +7,6 @@ import { DateTime } from 'luxon';
 import iconv from 'iconv-lite';
 
 const _CONFIG_LOCALE = 'en';
-const _CONFIG_ENCODING = 'utf8'; // 'latin1';
 
 // fix, facebook code monkeys were wrong with this
 // (apparently both in facebook and instagram exports)
@@ -51,7 +50,7 @@ async function init() {
   const posts = JSON.parse(
     await fs.promises.readFile(
       path.resolve(path.dirname(''), backupPath + 'content/posts_1.json'),
-      _CONFIG_ENCODING
+      'utf8'
     )
   );
 
