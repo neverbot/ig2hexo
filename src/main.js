@@ -10,6 +10,16 @@ const _CONFIG_LOCALE = 'en';
 async function init() {
   Logger.init();
 
+  const startTime = DateTime.now();
+
+  Logger.log(
+    chalk.cyan(
+      'Importing process start: ' +
+        startTime.setLocale(_CONFIG_LOCALE).toLocaleString(DateTime.TIME_24_WITH_SECONDS) +
+        '.'
+    )
+  );
+
   const args = process.argv;
 
   if (args.length < 3) {
@@ -41,6 +51,8 @@ async function init() {
   await hexo.init();
 
   Logger.log(chalk.cyan('Hexo instance initialized.'));
+
+  let numPosts = 0;
 
   for (const post of posts) {
     // let text = post.title ? post.title : post.media[0].title;
@@ -76,7 +88,23 @@ async function init() {
       },
       true
     );
+
+    numPosts++;
   }
+
+  const endTime = DateTime.now();
+  const time = endTime.diff(startTime, 'seconds').toObject();
+
+  Logger.log(
+    chalk.cyan(
+      'Importing process ended: ' +
+        time.seconds.toFixed(1) +
+        ' seconds.\n' +
+        ' - ' +
+        numPosts +
+        ' posts.'
+    )
+  );
 }
 
 async function run() {}
